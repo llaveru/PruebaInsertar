@@ -1,16 +1,21 @@
 package com.hector.seagate.pruebainsertar;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +26,12 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,7 +56,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 import static android.R.drawable.stat_notify_missed_call;
 
-public class MainActivity extends AppCompatActivity implements LocationListener{
+public class MainActivity extends AppCompatActivity implements LocationListener,com.google.android.gms.location.LocationListener,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
+{
     Random alea;
     TextView texto;
     EditText etlon,etlat;
@@ -56,6 +68,36 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     RelativeLayout layout;
     receptorOnOffGps receptor;
     LocationManager  gestorPosicion;
+    Location location;
+    LocationRequest mLocationRequest;
+    GoogleApiClient mGoogleApiClient; //declaramos una instancia de la APi de google
+    //se necesita añadir en build.graddle
+    //compile 'com.google.android.gms:play-services:6.+'
+    //e implementear GoogleApiClient.ConnectionCallbacks, para
+    //que salgan los metodos onConnected y onConnectedcancelled
+
+    public void checkPermission(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                ){//Can add more as per requirement
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+        }
+    }
+
+
+    protected void startLocationUpdates() {
+       mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Set the update interval to 5 seconds
+        mLocationRequest.setInterval(5000);
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest,  this);
+    }
+
     @Override
 
     protected void onDestroy() {
@@ -124,6 +166,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         texto= (TextView) findViewById(R.id.texto);
         icoSat = (ImageView) findViewById(R.id.icoSat);
         btnInsertar= (Button) findViewById(R.id.boton);
+/*
+    This is called before initializing the map because the map needs permissions(the cause of the crash)
+    */
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M ) {
+            checkPermission();
+        }
+
+        location=null;
+// Create an instance of GoogleAPIClient.
+
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
 
 
         gestorPosicion = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -191,10 +250,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         }
     }
 
+
+
     @Override
     public void onLocationChanged(Location location) {
+        tarea = new TareaInsertar(MainActivity.this);
 
+this.location = location;
+Log.d("posicion","posicion cambiada: "+this.location.getLatitude());
+if (this.location!=null){
+
+    etlon.setText(String.valueOf((float) ((this.location.getLongitude()))));
+    etlat.setText(String.valueOf((float) ((this.location.getLatitude()))));
+
+    tarea.execute(String.valueOf(etlon.getText().toString()),etlat.getText().toString());
+        Toast.makeText(getApplicationContext(),"posicion cambiada",Toast.LENGTH_LONG).show();}
     }
+
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -240,7 +312,37 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         }
 
 
-}
+    @Override
+    public void onConnected(Bundle bundle) {
+
+//        if (mRequestingLocationUpdates) {
+            if (true) {
+
+            startLocationUpdates();
+    }}
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+
+    @Override
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
 
 
     class TareaInsertar extends AsyncTask<String,Void,String> {
@@ -382,4 +484,4 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     }
 
 
-}
+}}

@@ -59,7 +59,7 @@ import static android.R.drawable.stat_notify_missed_call;
 //prueba git
 public class MainActivity extends AppCompatActivity implements LocationListener, com.google.android.gms.location.LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-
+    TelephonyManager tMgr;
     String idTelefono;
     Random alea;
     TextView texto;
@@ -173,8 +173,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         //se invoca el manager de telefonia para saber el id del telefono y así poder identificar
         //el vehículo, ya que el deviceId es único para cada dispositivo.
 
-        TelephonyManager tMgr = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+         tMgr = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         idTelefono = tMgr.getDeviceId();
+        Log.d("PRUEBAS",idTelefono);
 
         layout = (RelativeLayout) findViewById(R.id.layout);
         etlon = (EditText) findViewById(R.id.etlon);
@@ -231,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 etlat.setText(String.valueOf((float) (alea.nextFloat() / 4) + 43));
 
                 //ejecuto el asyntask pasandole latitud, longitud e idTelefono
-                tarea.execute(etlon.getText().toString(), etlat.getText().toString(),idTelefono);
+                tarea.execute(etlon.getText().toString(), etlat.getText().toString(),idTelefono.toString());
 
                 try {
                     Thread.sleep(500);
@@ -276,8 +277,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             etlon.setText(String.valueOf((float) ((this.location.getLongitude()))));
             etlat.setText(String.valueOf((float) ((this.location.getLatitude()))));
 
-            tarea.execute(String.valueOf(etlon.getText().toString()), etlat.getText().toString());
-            Toast.makeText(getApplicationContext(), "posicion cambiada", Toast.LENGTH_LONG).show();
+            tarea.execute(String.valueOf(etlon.getText().toString()), etlat.getText().toString(),idTelefono);
+            Toast.makeText(getApplicationContext(), "posicion cambiada", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -387,14 +388,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         }
 
-
+        //
+        //coloca en el TextView "registro correcto", que es lo que recibe este
+        //metodo como parámetro.
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             textoUI = (TextView) this.activity.findViewById(R.id.texto);
             textoUI.setText(s);
-            //noinspection ResourceType
-            //textoUI.setTextColor(android.R.color.holo_green_light);
+
         }
 
         @Override
@@ -405,9 +407,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             lon = params[1];
             idTlf = params[2];
 
-            //HashMap<String,String> parametros = new HashMap<>();
-            //parametros.put("a", lat);
-            //parametros.put("b", lon);
 
             String data = "";
             URL url = null;
@@ -445,7 +444,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 bw = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 
                 data = URLEncoder.encode("a", "UTF-8") + "=" + URLEncoder.encode(lon, "UTF-8") + "&" + URLEncoder.encode("b", "UTF-8") + "=" + URLEncoder.encode(lat, "UTF-8")
-                        + "&" + URLEncoder.encode("c", "UTF-8") + "=" + URLEncoder.encode(idTlf, "UTF-8");
+                        + "&" + URLEncoder.encode("c", "UTF-8") + "=" + (URLEncoder.encode(idTlf,"UTF-8"));
 
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

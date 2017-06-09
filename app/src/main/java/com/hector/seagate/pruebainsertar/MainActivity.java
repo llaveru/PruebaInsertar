@@ -230,8 +230,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
                 etlat.setText(String.valueOf((float) (alea.nextFloat() / 4) + 43));
 
-
-                tarea.execute(etlon.getText().toString(), etlat.getText().toString());
+                //ejecuto el asyntask pasandole latitud, longitud e idTelefono
+                tarea.execute(etlon.getText().toString(), etlat.getText().toString(),idTelefono);
 
                 try {
                     Thread.sleep(500);
@@ -365,6 +365,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         Activity activity;
         String lon = null;
         String lat = null;
+        String idTlf=null;
 
         //necesario crear este constructor, para al instanciar la clase, obtener el contexto de los edittext, que
         //estan en la actividad de la UI, por eso se pasa como parametro la activity
@@ -402,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             String response = "";
             lat = params[0];
             lon = params[1];
-
+            idTlf = params[2];
 
             //HashMap<String,String> parametros = new HashMap<>();
             //parametros.put("a", lat);
@@ -443,7 +444,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             try {
                 bw = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 
-                data = URLEncoder.encode("a", "UTF-8") + "=" + URLEncoder.encode(lon, "UTF-8") + "&" + URLEncoder.encode("b", "UTF-8") + "=" + URLEncoder.encode(lat, "UTF-8");
+                data = URLEncoder.encode("a", "UTF-8") + "=" + URLEncoder.encode(lon, "UTF-8") + "&" + URLEncoder.encode("b", "UTF-8") + "=" + URLEncoder.encode(lat, "UTF-8")
+                        + "&" + URLEncoder.encode("c", "UTF-8") + "=" + URLEncoder.encode(idTlf, "UTF-8");
 
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
